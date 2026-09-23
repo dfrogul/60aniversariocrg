@@ -40,52 +40,10 @@ async function countdown(label){$("overlay").classList.add("show");$("showLabel"
 async function reveal(winner,label,index,total,pool){await countdown(label);$("showProgress").textContent=`Premio ${index} de ${total}`;for(let k=0;k<32;k++){const r=pool[Math.floor(Math.random()*pool.length)];$("showName").textContent=r?.nombre||winner.nombre;await sleep(45+k*4)}$("showLabel").textContent="PERSOA PREMIADA";$("showName").textContent=winner.nombre;$("showProgress").textContent=label;confetti();await sleep(1700);$("overlay").classList.remove("show")}
 function confetti(){const colors=["#f3ca12","#fff","#34b28a","#f08080"];for(let i=0;i<80;i++){const e=document.createElement("i");e.className="confetti";e.style.left=Math.random()*100+"vw";e.style.background=colors[i%colors.length];e.style.animationDelay=Math.random()*.5+"s";e.style.transform=`rotate(${Math.random()*360}deg)`;document.body.appendChild(e);setTimeout(()=>e.remove(),3500)}}
 async function drawAll(){if(drawing)return;const pool=eligibleRows();if(!pool.length)return;drawing=true;winners={smartbox:[],maillot:[]};render();const selected=secureShuffle(pool).slice(0,Math.min(5,pool.length));const smart=selected.slice(0,Math.min(3,selected.length));const mail=selected.slice(3,5);for(let i=0;i<smart.length;i++){await reveal(smart[i],`SMARTBOX ${i+1}`,i+1,smart.length,pool);winners.smartbox.push(smart[i]);showWinners()}for(let i=0;i<mail.length;i++){await reveal(mail[i],`MAILLOT RGA ${i+1}`,i+1,mail.length,pool);winners.maillot.push(mail[i]);showWinners()}drawing=false;render();showFinal()}
-function showFinal(){
-
-    $("overlay").classList.add("show");
-
-    $("showLabel").textContent =
-        "60 ANIVERSARIO";
-
-    $("showName").className = "";
-
-    $("showName").textContent =
-        "🎉 Persoas premiadas";
-
-    $("showProgress").textContent =
-        "Parabéns ás persoas gañadoras";
-
-    $("finalContent").style.display =
-        "grid";
-
-    const smartboxHtml =
-        winners.smartbox.length
-        ? winners.smartbox
-            .map(w => `<div>${esc(w.nombre)}</div>`)
-            .join("")
-        : "<div>Sen adxudicar</div>";
-
-    const maillotHtml =
-        winners.maillot.length
-        ? winners.maillot
-            .map(w => `<div>${esc(w.nombre)}</div>`)
-            .join("")
-        : "<div>Sen adxudicar</div>";
-
-    $("finalContent").innerHTML = `
-        <div>
-            <h3>🎁 Smartbox</h3>
-            ${smartboxHtml}
-        </div>
-
-        <div>
-            <h3>🚴 Maillot RGA</h3>
-            ${maillotHtml}
-        </div>
-    `;
-
-    $("closeFinal").style.display =
-        "inline-block";
-
-    confetti();
-}
+function showFinal(){$("overlay").classList.add("show");$("showLabel").textContent="60 ANIVERSARIO";$("showName").className="";$("showName").textContent="🎉 Persoas premiadas";$("showProgress").textContent="Parabéns!";$("finalContent").style.display="grid";$("finalContent").innerHTML=`<div><h3>🎁 Smartbox</h3>${winners.smartbox.map(w=>`<div>${esc(w.nombre)}</div>`).join("")||'<div>Sen adxudicar</div>'}</div><div><h3>🚴 Maillot RGA</h3>${winners.maillot.map(w=>`<div>${esc(w.nombre)}</div>`).join("")||'<div>Sen adxudicar</div>'}</div>`;$("closeFinal").style.display="inline-block";confetti()}
+function exportCSV(){const all=[...winners.smartbox.map(w=>({premio:"Smartbox",...w})),...winners.maillot.map(w=>({premio:"Maillot RGA",...w}))];if(!all.length){$("status").textContent="Aínda non hai persoas premiadas para exportar.";return}const lines=[["Premio","Nome","Acertos","Tempo (s)"],...all.map(w=>[w.premio,w.nombre,scoreOf(w),timeOf(w)??""])].map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("
+");const blob=new Blob(["﻿"+lines],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ganadores_quiz_60_aniversario.csv";a.click();URL.revokeObjectURL(a.href)}
+$("refresh").onclick=load;$("draw").onclick=drawAll;$("export").onclick=exportCSV;$("closeFinal").onclick=()=>$("overlay").classList.remove("show");load();
+</script>
+</body>
+</html>
