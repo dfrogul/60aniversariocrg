@@ -491,7 +491,53 @@
     $("startDrawBtn").addEventListener("click", startDraw);
     $("closeOverlayBtn").addEventListener("click", closeOverlay);
     window.addEventListener("resize", () => { if (confettiPieces.length) resizeConfetti(); });
-    document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !drawing) closeOverlay(); });
+    document.addEventListener("keydown", (event) => {
+
+  if (event.code === "Space") {
+
+    event.preventDefault();
+
+    // Pantalla principal
+    if (
+      !drawing &&
+      !document.getElementById("drawOverlay")
+        .classList.contains("show")
+    ) {
+      startDraw();
+      return;
+    }
+
+    // Ganador mostrado
+    const nextBtn = document.getElementById("nextDrawBtn");
+
+    if (
+      nextBtn &&
+      nextBtn.style.display !== "none"
+    ) {
+      nextBtn.click();
+      return;
+    }
+
+    // Pantalla final
+    const finalStage = document.getElementById("finalStage");
+
+    if (
+      finalStage &&
+      finalStage.style.display !== "none"
+    ) {
+      document
+        .getElementById("closeOverlayBtn")
+        .click();
+    }
+  }
+
+  if (
+    event.key === "Escape" &&
+    !drawing
+  ) {
+    closeOverlay();
+  }
+});
 
     renderDashboard();
     loadData();
