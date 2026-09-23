@@ -90,7 +90,7 @@
     .name-pill{max-width:100%;padding:7px 10px;border-radius:999px;color:var(--green-dark);background:var(--green-soft);font-size:.76rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .perfect .name-pill{color:#705700;background:rgba(243,202,18,.23)}
     .empty{color:#90a39c;font-size:.82rem;font-style:italic}
-    .two-col{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:18px;align-items:stretch}
+    .two-col{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:18px;align-items:stretch}
     .panel{padding:24px;border:1px solid rgba(0,120,83,.09);border-radius:var(--radius);background:rgba(255,255,255,.92);box-shadow:var(--shadow-soft)}
     .panel-title{margin:0 0 20px;font-size:1.3rem;letter-spacing:-.02em}
     .bars{display:grid;gap:11px}.bar-row{display:grid;grid-template-columns:32px 1fr 38px;align-items:center;gap:10px}.bar-level{font-weight:950;color:var(--green-dark)}
@@ -116,6 +116,7 @@
     .rolling-name{display:none;margin:28px auto 0;min-height:1.2em;font-size:clamp(2rem,7vw,5.8rem);font-weight:950;line-height:1.05;letter-spacing:-.045em;text-shadow:0 14px 35px rgba(0,0,0,.22);word-break:break-word}
     .winner-card{display:none;margin:28px auto 0;padding:34px;width:min(760px,100%);border:1px solid rgba(255,255,255,.2);border-radius:30px;background:rgba(255,255,255,.12);box-shadow:0 26px 70px rgba(0,0,0,.22);backdrop-filter:blur(16px);animation:winnerIn .65s cubic-bezier(.17,.89,.32,1.25) both}
     .winner-card .small{color:#fff3a4;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.winner-name{margin-top:12px;font-size:clamp(2.3rem,7vw,6rem);font-weight:950;line-height:1;letter-spacing:-.05em;word-break:break-word}
+    .next-draw-btn{display:none;margin:28px auto 0;min-height:56px;padding:0 26px;border:0;border-radius:17px;color:#4a3800;background:linear-gradient(135deg,#ffe15a,var(--gold));font-weight:950;letter-spacing:.03em;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.2);transition:.2s ease}.next-draw-btn:hover{transform:translateY(-2px) scale(1.01)}
     @keyframes winnerIn{from{opacity:0;transform:scale(.62) rotate(-2deg)}to{opacity:1;transform:scale(1) rotate(0)}}
     .final-stage{display:none}.final-stage h2{margin:0 0 30px;font-size:clamp(2.5rem,7vw,6rem);letter-spacing:-.05em}.prize-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px;text-align:left}.prize-box{padding:25px;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:rgba(255,255,255,.10);backdrop-filter:blur(12px)}.prize-box h3{margin:0 0 14px;color:var(--gold);font-size:1.3rem}.winner-list{display:grid;gap:9px}.final-winner{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.1);font-weight:850}.final-number{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:50%;color:var(--green-dark);background:var(--gold);font-size:.8rem;font-weight:950}.close-btn{margin-top:24px;padding:13px 30px;border:0;border-radius:14px;color:var(--green-dark);background:#fff;font-weight:950;cursor:pointer}
     #confetti{position:fixed;inset:0;z-index:1001;width:100%;height:100%;pointer-events:none}
@@ -152,18 +153,13 @@
       </div>
     </section>
 
-    <section class="section" aria-labelledby="distributionTitle">
-      <div class="section-heading"><div><h2 id="distributionTitle">Distribución de acertos</h2><div class="section-kicker">Participantes agrupados polo resultado obtido</div></div></div>
-      <div id="distributionGrid" class="distribution-grid"></div>
-    </section>
-
     <section class="section two-col">
       <article class="panel" aria-labelledby="resultsTitle">
         <h2 id="resultsTitle" class="panel-title">Resultados</h2>
         <div id="bars" class="bars"></div>
       </article>
       <article class="panel" aria-labelledby="rankingTitle">
-        <h2 id="rankingTitle" class="panel-title">🏆 Clasificación TOP 20</h2>
+        <h2 id="rankingTitle" class="panel-title">🏆 Clasificación TOP 10</h2>
         <div class="ranking-wrap">
           <table>
             <thead><tr><th>Posición</th><th>Participante</th><th>Acertos</th><th>Tempo</th></tr></thead>
@@ -189,7 +185,7 @@
       <div id="drawLabel" class="draw-label"></div>
       <div id="countdown" class="countdown">5</div>
       <div id="rollingName" class="rolling-name"></div>
-      <div id="winnerCard" class="winner-card"><div class="small">Persoa premiada</div><div id="winnerName" class="winner-name"></div></div>
+      <div id="winnerCard" class="winner-card"><div class="small">Persoa premiada</div><div id="winnerName" class="winner-name"></div><button id="nextDrawBtn" class="next-draw-btn" type="button">COMEZAR O SEGUINTE SORTEO</button></div>
     </div>
     <div id="finalStage" class="final-stage">
       <h2>🎉 Persoas premiadas</h2>
@@ -299,23 +295,9 @@
       $("kpiParticipants").textContent = participants.length;
       $("kpiPerfect").textContent = groups[7].length;
       $("kpiBest").textContent = `${best}/7`;
-      renderDistribution(groups);
       renderBars(groups);
       renderRanking();
       renderLottery(groups);
-    }
-
-    function renderDistribution(groups) {
-      $("distributionGrid").innerHTML = [7,6,5,4,3,2,1,0].map((score) => {
-        const people = groups[score];
-        const names = people.length
-          ? people.map((p) => `<span class="name-pill" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>`).join("")
-          : '<span class="empty">Sen participantes</span>';
-        return `<article class="score-card ${score === 7 ? "perfect" : ""}">
-          <div class="score-top"><div class="score-badge">${score}/7</div><div class="score-count"><strong>${people.length}</strong><span>${people.length === 1 ? "persoa" : "persoas"}</span></div></div>
-          <div class="names">${names}</div>
-        </article>`;
-      }).join("");
     }
 
     function renderBars(groups) {
@@ -328,7 +310,7 @@
     }
 
     function renderRanking() {
-      const sorted = [...participants].sort((a,b) => b.score - a.score || a.time - b.time || a.name.localeCompare(b.name, "gl")).slice(0,20);
+      const sorted = [...participants].sort((a,b) => b.score - a.score || a.time - b.time || a.name.localeCompare(b.name, "gl")).slice(0,10);
       const medals = ["🥇","🥈","🥉"];
       $("rankingBody").innerHTML = sorted.length ? sorted.map((person,index) => `<tr class="${index < 3 ? `rank-${index + 1}` : ""}">
         <td class="rank-position">${medals[index] || `${index + 1}º`}</td>
@@ -390,12 +372,21 @@
       rolling.style.display = "none";
     }
 
-    async function showWinner(person) {
+    async function showWinner(person, prizeIndex) {
       $("winnerName").textContent = person.name;
-      $("winnerCard").style.display = "block";
+      const winnerCard = $("winnerCard");
+      const nextButton = $("nextDrawBtn");
+      winnerCard.style.display = "block";
+      nextButton.textContent = prizeIndex === PRIZES.length - 1
+        ? "VER PERSOAS PREMIADAS"
+        : "COMEZAR O SEGUINTE SORTEO";
+      nextButton.style.display = "inline-flex";
       startConfetti();
-      await sleep(2800);
-      $("winnerCard").style.display = "none";
+      await new Promise((resolve) => {
+        nextButton.addEventListener("click", resolve, { once: true });
+      });
+      nextButton.style.display = "none";
+      winnerCard.style.display = "none";
     }
 
     async function startDraw() {
@@ -416,15 +407,15 @@
       const pool = [...candidates];
       const winners = [];
       try {
-        for (const prize of PRIZES) {
+        for (let prizeIndex = 0; prizeIndex < PRIZES.length; prizeIndex++) {
+          const prize = PRIZES[prizeIndex];
           $("drawLabel").textContent = prize;
           await runCountdown();
           await rollNames(pool);
           const winnerIndex = secureRandomIndex(pool.length);
           const winner = pool.splice(winnerIndex, 1)[0];
           winners.push({prize, person:winner});
-          await showWinner(winner);
-          await sleep(350);
+          await showWinner(winner, prizeIndex);
         }
         renderFinalWinners(winners);
         drawStage.style.display = "none";
