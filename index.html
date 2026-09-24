@@ -1,254 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="gl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#007853" />
-  <title>Quiz do 60 Aniversario · Caixa Rural Galega</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{
-      --green:#007853;--dark:#075447;--gold:#f3ca12;--cream:#f7f8f3;
-      --white:#fff;--text:#18362e;--muted:#64746f;--danger:#d52b2b;
-      --shadow:0 22px 60px rgba(7,84,71,.16);--radius:26px;
-    }
-    *{box-sizing:border-box}
-    html,body{min-height:100%;margin:0}
-    body{
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--text);background:
-      radial-gradient(circle at 5% 5%,rgba(243,202,18,.23),transparent 28%),
-      radial-gradient(circle at 95% 90%,rgba(0,120,83,.18),transparent 32%),
-      linear-gradient(135deg,#f8faf6,#eef5f1);display:grid;place-items:center;padding:28px 18px;
-    }
-    button,input{font:inherit}
-    button{border:0;cursor:pointer}
-    .app{width:min(100%,860px)}
-    .brand{display:flex;align-items:center;justify-content:center;gap:15px;margin:0 0 22px}
-    .brand img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 8px 15px rgba(7,84,71,.14))}
-    .brand-name{color:var(--dark);font-size:clamp(1.05rem,2vw,1.3rem);font-weight:800;letter-spacing:.01em}
-    .card{background:rgba(255,255,255,.94);border:1px solid rgba(7,84,71,.09);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-    .hero{padding:clamp(28px,6vw,54px)}
-    .eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--dark);background:rgba(243,202,18,.25);padding:8px 13px;border-radius:999px;font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
-    h1{font-size:clamp(2rem,6vw,4rem);line-height:.98;letter-spacing:-.05em;margin:20px 0 16px;color:var(--dark)}
-    .subtitle{font-size:clamp(1rem,2.2vw,1.18rem);line-height:1.65;color:var(--muted);max-width:660px;margin:0 0 30px}
-    .field label{display:block;font-weight:800;margin:0 0 9px}
-    .field input{width:100%;border:2px solid #dce7e2;border-radius:15px;padding:15px 16px;color:var(--text);background:#fff;outline:none;transition:.2s}
-    .field input:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(0,120,83,.1)}
-    .hint,.form-error{font-size:.84rem;margin:8px 2px 0}.hint{color:var(--muted)}.form-error{color:var(--danger);display:none;font-weight:700}
-    details{background:#f4f7f5;border-radius:15px;padding:14px 16px;margin:20px 0;color:var(--muted);line-height:1.5;font-size:.9rem}
-    summary{color:var(--dark);font-weight:800;cursor:pointer}
-    .consent{display:flex;align-items:flex-start;gap:12px;margin:20px 0 25px;line-height:1.45;color:#42554f}
-    .consent input{accent-color:var(--green);width:20px;height:20px;flex:0 0 auto;margin-top:1px}
-    .primary{width:100%;padding:16px 22px;border-radius:15px;background:linear-gradient(135deg,var(--green),var(--dark));color:#fff;font-weight:900;box-shadow:0 13px 24px rgba(0,120,83,.2);transition:.2s}
-    .primary:hover{transform:translateY(-2px)}.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
-    .hidden{display:none!important}
-    .quiz{padding:clamp(24px,5vw,46px)}
-    .quiz-top{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;margin-bottom:28px}
-    .progress-copy{font-weight:900;color:var(--dark);margin-bottom:10px}
-    .progress-track{height:10px;background:#e2ebe7;border-radius:999px;overflow:hidden}
-    .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:inherit;transition:width .35s ease}
-    .timer{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;background:#eef5f1;border:6px solid var(--green);font-size:1.5rem;font-weight:950;color:var(--dark);transition:.25s}
-    .timer.urgent{color:var(--danger);border-color:var(--danger);background:#fff0f0;animation:pulse .75s infinite}
-    @keyframes pulse{50%{transform:scale(1.07);box-shadow:0 0 0 10px rgba(213,43,43,.08)}}
-    .question{font-size:clamp(1.35rem,3.5vw,2rem);line-height:1.25;letter-spacing:-.025em;color:var(--dark);margin:0 0 24px}
-    .options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-bottom:26px}
-    .option{min-height:64px;text-align:left;padding:16px 18px;border:2px solid #dce7e2;border-radius:16px;background:#fff;color:var(--text);font-weight:750;transition:.18s}
-    .option:hover{border-color:#8ab7a8;background:#f6faf8}.option.selected{border-color:var(--green);background:rgba(0,120,83,.08);box-shadow:inset 0 0 0 1px var(--green)}
-    .finish{padding:clamp(30px,6vw,60px);background:linear-gradient(145deg,var(--green),var(--dark));color:#fff;text-align:center;position:relative}
-    .finish:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 10%,rgba(243,202,18,.24),transparent 35%);pointer-events:none}
-    .finish>*{position:relative}.thanks{font-weight:950;letter-spacing:.05em;color:var(--gold);font-size:clamp(1.05rem,3vw,1.4rem)}
-    .participant-name{font-size:clamp(1.35rem,4vw,2rem);font-weight:850;margin-top:12px}.score{font-size:clamp(5rem,19vw,9rem);font-weight:1000;line-height:1;margin:24px 0 4px;letter-spacing:-.08em;color:white}
-    .score-copy{font-size:1.1rem}.result-message{font-size:clamp(1.15rem,3vw,1.55rem);font-weight:900;color:var(--gold);margin:24px auto;max-width:650px}.saved{max-width:600px;margin:25px auto 0;line-height:1.55;color:rgba(255,255,255,.88);border-top:1px solid rgba(255,255,255,.2);padding-top:24px}
-    @media(max-width:620px){body{padding:16px 12px}.brand img{width:60px;height:60px}.options{grid-template-columns:1fr}.hero,.quiz,.finish{border-radius:22px}.quiz-top{align-items:start}.timer{width:67px;height:67px;font-size:1.25rem}.score{letter-spacing:-.06em}}
-    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#007853">
+<title>Quiz do 60 Aniversario · Caixa Rural Galega</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--green:#007853;--dark:#075447;--gold:#f3ca12;--ink:#173b32;--muted:#667a73;--danger:#d42626;--line:#dce9e4;--shadow:0 22px 60px rgba(7,84,71,.17)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 10% 5%,rgba(243,202,18,.22),transparent 25rem),radial-gradient(circle at 90% 90%,rgba(0,120,83,.15),transparent 30rem),#f1f7f4}
+button,input{font:inherit}.app{width:min(900px,calc(100% - 24px));margin:auto;padding:24px 0 42px}.brand{text-align:center;margin-bottom:20px}.logo{display:block;max-width:min(280px,75vw);max-height:125px;object-fit:contain;margin:0 auto 10px}.brand-name{color:var(--dark);font-size:.83rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.brand h1{margin:8px 0 10px;color:var(--dark);font-size:clamp(2rem,6vw,3.65rem);line-height:1;letter-spacing:-.045em}.subtitle{max-width:700px;margin:auto;color:var(--muted);line-height:1.55}
+.card{overflow:hidden;border:1px solid rgba(7,84,71,.08);border-radius:27px;background:rgba(255,255,255,.95);box-shadow:var(--shadow)}.screen[hidden]{display:none!important}.content{padding:clamp(22px,5vw,45px)}h2{color:var(--dark)}
+.field-label{display:block;margin:0 0 9px;font-weight:850;color:var(--dark)}input[type=text]{width:100%;padding:15px 16px;border:2px solid var(--line);border-radius:15px;outline:0}input[type=text]:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(0,120,83,.1)}.error{min-height:22px;margin:7px 2px 0;color:#b91c1c;font-size:.88rem;font-weight:750}
+details{margin:18px 0;border:1px solid var(--line);border-radius:15px;background:#f7faf8}summary{cursor:pointer;padding:15px 16px;color:var(--dark);font-weight:850}.detail-copy{padding:0 16px 16px;color:var(--muted);font-size:.9rem;line-height:1.55}.rules{margin:18px 0;padding:16px 18px;border-left:5px solid var(--gold);border-radius:14px;background:#fff8d9;color:#4f4930;line-height:1.55}.rules strong{display:block;margin-bottom:5px;color:var(--dark)}.check{display:flex;gap:11px;align-items:flex-start;line-height:1.4}.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--green)}
+.btn{border:0;border-radius:15px;padding:15px 22px;font-weight:900;cursor:pointer}.primary{width:100%;margin-top:22px;color:white;background:linear-gradient(135deg,var(--green),var(--dark));box-shadow:0 12px 26px rgba(0,120,83,.22)}.btn:disabled{opacity:.48;cursor:not-allowed}.quiz-top{padding-bottom:22px;border-bottom:1px solid #e9efed;margin-bottom:25px}.status{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.count{font-weight:900;color:var(--dark)}.timer{width:60px;height:60px;display:grid;place-items:center;border:4px solid rgba(0,120,83,.2);border-radius:50%;color:var(--dark);background:#edf7f3;font-size:1.25rem;font-weight:950}.timer.urgent{border-color:#ffb4b4;color:white;background:var(--danger);animation:pulse .75s infinite}.track{height:9px;border-radius:99px;background:#e6efeb;overflow:hidden}.progress{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--green));transition:.3s}.question{margin:0 0 20px;font-size:clamp(1.35rem,4vw,2.05rem);line-height:1.25}.question-image{display:block;width:100%;max-width:520px;max-height:300px;object-fit:contain;margin:0 auto 22px;border-radius:18px;background:#f3f7f5;box-shadow:0 10px 28px rgba(7,84,71,.14)}.question-image[hidden]{display:none!important}.options{display:grid;gap:12px}.option{width:100%;position:relative;padding:16px 16px 16px 56px;border:2px solid #e0ebe7;border-radius:16px;text-align:left;color:var(--ink);background:#fbfdfc;font-weight:760;cursor:pointer}.option:before{content:attr(data-letter);position:absolute;left:16px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:grid;place-items:center;border-radius:9px;color:var(--dark);background:#e6f3ee;font-size:.8rem;font-weight:950}.option.selected{border-color:var(--green);color:white;background:linear-gradient(135deg,var(--green),var(--dark))}.option.selected:before{color:var(--dark);background:var(--gold)}.actions{margin-top:22px;display:flex;justify-content:flex-end}.actions .btn{min-width:180px;color:white;background:var(--dark)}
+.saving{text-align:center}.spinner{width:45px;height:45px;margin:0 auto 16px;border:4px solid #dcebe5;border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}.final{padding:clamp(28px,7vw,60px);text-align:center;color:white;background:linear-gradient(145deg,#008b61,var(--green) 44%,var(--dark))}.thanks{color:#fff3a3;font-weight:950;letter-spacing:.07em}.final-name{margin-top:13px;font-size:clamp(1.3rem,4vw,1.9rem);font-weight:900}.score{margin:18px 0 5px;font-size:clamp(5rem,21vw,9rem);font-weight:1000;line-height:.9;letter-spacing:-.08em}.result{max-width:600px;margin:24px auto;padding:17px;border:1px solid rgba(255,255,255,.18);border-radius:17px;background:rgba(255,255,255,.12);font-weight:850}.registered{max-width:610px;margin:0 auto;line-height:1.55;color:#ecfff8}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{50%{transform:scale(1.07)}}@media(max-width:560px){.app{width:min(100% - 16px,900px);padding-top:14px}.content{padding:22px 17px}.actions .btn{width:100%}.question-image{max-height:230px}}
+</style>
 </head>
 <body>
-  <main class="app">
-    <header class="brand">
-      <img src="logo60.png" alt="Logo do 60 aniversario" />
-      <div class="brand-name">Caixa Rural Galega</div>
-    </header>
-
-    <section id="startScreen" class="card hero">
-      <span class="eyebrow">Orgullosamente rurais desde 1966</span>
-      <h1>Quiz do 60 Aniversario</h1>
-      <p class="subtitle">Pon a proba os teus coñecementos sobre a historia de Caixa Rural Galega e participa no sorteo.</p>
-      <form id="startForm" novalidate>
-        <div class="field">
-          <label for="name">Nome e apelidos</label>
-          <input id="name" name="name" type="text" autocomplete="name" maxlength="100" placeholder="Escribe o teu nome completo" />
-          <p class="hint">Introduce polo menos un nome e un apelido.</p>
-          <p id="nameError" class="form-error">Debes indicar o teu nome e apelidos.</p>
-        </div>
-        <details>
-          <summary>Protección de datos</summary>
-          <p>Os datos facilitados utilizaranse para xestionar a participación neste quiz e no sorteo do 60 Aniversario. Ao marcar a caixa, confirmas que liches e aceptas este tratamento.</p>
-        </details>
-        <label class="consent">
-          <input id="privacy" type="checkbox" />
-          <span>Lin e acepto a información sobre protección de datos.</span>
-        </label>
-        <p id="privacyError" class="form-error">Debes aceptar a información sobre protección de datos.</p>
-        <button class="primary" type="submit">Comezar o quiz</button>
-      </form>
-    </section>
-
-    <section id="quizScreen" class="card quiz hidden" aria-live="polite">
-      <div class="quiz-top">
-        <div>
-          <div id="progressCopy" class="progress-copy">Pregunta 1 de 7</div>
-          <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
-        </div>
-        <div id="timer" class="timer" aria-label="Tempo restante">40</div>
-      </div>
-      <h2 id="questionText" class="question"></h2>
-      <div id="options" class="options"></div>
-      <button id="nextBtn" class="primary" type="button" disabled>Seguinte</button>
-    </section>
-
-    <section id="finishScreen" class="card finish hidden" aria-live="polite">
-      <div class="thanks">✅ GRAZAS POR PARTICIPAR</div>
-      <div id="finalName" class="participant-name"></div>
-      <div id="score" class="score">0/7</div>
-      <div id="scoreCopy" class="score-copy"></div>
-      <div id="resultMessage" class="result-message"></div>
-      <div class="saved">A túa participación quedou rexistrada correctamente para o sorteo do 60 Aniversario.</div>
-    </section>
-  </main>
-
-  <script>
-    const QUESTIONS = [
-      {text:"Cal é a idade media do Consello Reitor?",options:["73","84","61","46"],correct:"61"},
-      {text:"Cantos atracos se levan rexistrados en CRG desde o ano 1981?",options:["6","7","10","12"],correct:"7"},
-      {text:"Cal foi o beneficio neto da Caixa no ano 2024?",options:["32.146.758,45€","31.843.733,12€","33.450.124,73€","29.365.100,37€"],correct:"32.146.758,45€"},
-      {text:"En que ano a Entidade pasou a chamarse Caixa Rural Galega?",options:["1999","1995","2001","1993"],correct:"1999"},
-      {text:"En que ano se celebrou o 50 aniversario?",options:["2015","2014","2016","2017"],correct:"2016"},
-      {text:"Indica o número de persoas que se incorporaron ao cadro de persoal no ano 2025.",options:["13","10","3","9"],correct:"10"},
-      {text:"Cantas oficinas hai entre a provincia de Lugo e a provincia de Ourense?",options:["36","34","31","39"],correct:"39"}
-    ];
-
-    const SUPABASE_URL = "https://ernglrofutnxaaduxhja.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_2vg1tC1szNzuaxdZTivYnA_sdTLfYcE";
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    let participant = "";
-    let current = 0;
-    let answers = Array(QUESTIONS.length).fill(null);
-    let secondsLeft = 40;
-    let timerId = null;
-    let quizStartedAt = 0;
-    let finishing = false;
-
-    const $ = id => document.getElementById(id);
-    const normalized = value => value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
-    const isFullName = value => value.trim().split(/\s+/).filter(Boolean).length >= 2;
-
-    $("startForm").addEventListener("submit", event => {
-      event.preventDefault();
-      const nameValue = $("name").value.trim().replace(/\s+/g, " ");
-      const validName = isFullName(nameValue);
-      const validPrivacy = $("privacy").checked;
-      $("nameError").style.display = validName ? "none" : "block";
-      $("privacyError").style.display = validPrivacy ? "none" : "block";
-      if (!validName || !validPrivacy) return;
-      participant = nameValue;
-      quizStartedAt = performance.now();
-      $("startScreen").classList.add("hidden");
-      $("quizScreen").classList.remove("hidden");
-      renderQuestion();
-    });
-
-    function renderQuestion(){
-      clearInterval(timerId);
-      secondsLeft = 40;
-      const question = QUESTIONS[current];
-      $("progressCopy").textContent = `Pregunta ${current + 1} de ${QUESTIONS.length}`;
-      $("progressBar").style.width = `${((current + 1) / QUESTIONS.length) * 100}%`;
-      $("questionText").textContent = question.text;
-      $("timer").textContent = secondsLeft;
-      $("timer").classList.remove("urgent");
-      $("nextBtn").textContent = current === QUESTIONS.length - 1 ? "Finalizar" : "Seguinte";
-      $("nextBtn").disabled = answers[current] === null;
-      $("options").innerHTML = "";
-
-      question.options.forEach(option => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "option" + (answers[current] === option ? " selected" : "");
-        button.textContent = option;
-        button.addEventListener("click", () => selectOption(option, button));
-        $("options").appendChild(button);
-      });
-
-      timerId = setInterval(() => {
-        secondsLeft -= 1;
-        $("timer").textContent = secondsLeft;
-        if (secondsLeft <= 10) $("timer").classList.add("urgent");
-        if (secondsLeft <= 0){
-          clearInterval(timerId);
-          goNext();
-        }
-      }, 1000);
-    }
-
-    function selectOption(selectedOption, button){
-      answers[current] = selectedOption;
-      document.querySelectorAll(".option").forEach(item => item.classList.remove("selected"));
-      button.classList.add("selected");
-      $("nextBtn").disabled = false;
-    }
-
-    $("nextBtn").addEventListener("click", goNext);
-
-    function goNext(){
-      if (finishing) return;
-      clearInterval(timerId);
-      if (current < QUESTIONS.length - 1){
-        current += 1;
-        renderQuestion();
-      } else {
-        finishQuiz();
-      }
-    }
-
-    async function finishQuiz(){
-      if (finishing) return;
-      finishing = true;
-      clearInterval(timerId);
-      const totalElapsed = Math.max(0, Math.round((performance.now() - quizStartedAt) / 1000));
-      const score = answers.reduce((total, answer, index) => total + (answer === QUESTIONS[index].correct ? 1 : 0), 0);
-
-      $("quizScreen").classList.add("hidden");
-      $("finishScreen").classList.remove("hidden");
-      $("finalName").textContent = participant;
-      $("score").textContent = `${score}/${QUESTIONS.length}`;
-      $("scoreCopy").textContent = `Acertaches ${score} das ${QUESTIONS.length} preguntas`;
-      $("resultMessage").innerHTML = resultFor(score);
-
-      try {
-        const { error } = await db.rpc(
-          "registrar_participacion",
-          {
-            p_nombre: participant,
-            p_nombre_normalizado: normalized(participant),
-            p_respuestas: answers,
-            p_tiempo_total_segundos: totalElapsed
-          }
-        );
-        if (error) console.error("Erro de rexistro:", error);
-      } catch (error) {
-        console.error("Erro de conexión:", error);
-      }
-    }
-
-    function resultFor(score){
-      if (score === 7) return "🏆 Pleno!<br><span style=\"font-size:.78em;color:white\">Es un dos máximos acertantes do quiz.</span>";
-      if (score >= 5) return "👏 Magnífico resultado!";
-      if (score >= 3) return "✅ Bo coñecemento da historia de Caixa Rural Galega.";
-      return "🌱 Xa tes excusa para seguir coñecendo mellor a nosa historia.";
-    }
-  </script>
-</body>
-</html>
+<main class="app">
+<header class="brand"><img class="logo" src="logo60.png" alt="60 Aniversario de Caixa Rural Galega"><div class="brand-name">Caixa Rural Galega</div><h1>Quiz do 60 Aniversario</h1><p class="subtitle">Pon a proba os teus coñecementos sobre a historia de Caixa Rural Galega e participa no sorteo.</p></header>
+<section class="card" aria-live="polite">
+<div id="identifyScreen" class="screen content">
+<h2>Identifícate para participar</h2><p>Introduce o teu nome completo antes de comezar.</p>
+<form id="identifyForm" novalidate>
+<label class="field-label" for="participantName">Nome e apelidos</label><input id="participantName" type="text" maxlength="100" autocomplete="name" placeholder="Ex.: María López Pérez"><div id="nameError" class="error" role="alert"></div>
+<details><summary>Protección de datos</summary><div class="detail-copy">Os datos facilitados empregaranse exclusivamente para xestionar a participación neste quiz e no sorteo do 60 Aniversario.</div></details>
+<div class="rules"><strong>Condicións do sorteo</strong>Participarán no sorteo as <b>20 persoas mellor clasificadas</b>, tendo en conta primeiro o número de respostas correctas e, en caso de empate, o menor tempo empregado en completar o quiz.</div>
+<label class="check"><input id="privacyCheck" type="checkbox"><span>Acepto o tratamento dos meus datos para participar no quiz e no sorteo.</span></label><div id="privacyError" class="error" role="alert"></div>
+<button class="btn primary" type="submit">Comezar o quiz</button>
+</form></div>
+<div id="quizScreen" class="screen content" hidden><div class="quiz-top"><div class="status"><div id="questionCount" class="count">Pregunta 1 de 7</div><div id="timer" class="timer">40</div></div><div class="track"><div id="progress" class="progress"></div></div></div><h2 id="questionText" class="question"></h2><img id="questionImage" class="question-image" src="" alt="" hidden><div id="options" class="options"></div><div class="actions"><button id="nextBtn" class="btn" type="button" disabled>Seguinte</button></div></div>
+<div id="savingScreen" class="screen content saving" hidden><div class="spinner"></div><h2>Rexistrando a participación</h2><p>Estamos gardando o teu resultado…</p></div>
+<div id="finalScreen" class="screen final" hidden><div class="thanks">✅ GRAZAS POR PARTICIPAR</div><div id="finalName" class="final-name"></div><div id="finalScore" class="score">0/7</div><div id="scoreHelp"></div><div id="resultMessage" class="result"></div><p class="registered">A túa participación quedou rexistrada correctamente para o sorteo do 60 Aniversario.</p></div>
+</section></main>
+<script>
+"use strict";
+const SUPABASE_URL="https://ernglrofutnxaaduxhja.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_2vg1tC1szNzuaxdZTivYnA_sdTLfYcE";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const QUESTIONS=[
+{text:"Cal foi o primeiro beneficio obtido por Caixa Rural Galega na súa historia?",options:["27.000 pesetas","33.000 pesetas","41.000 pesetas","18.000 pesetas"],correct:"33.000 pesetas"},
+{text:"Cando pasou a denominarse Caixa Rural Provincial de Lugo como Caixa Rural de Lugo?",options:["1988","1991","1994","1997"],correct:"1991"},
+{text:"Que había presente en todas as inauguracións de novas oficinas?",options:["Unha cinta verde cortada polo director","Unha empanada para inaugurar con fundamento","Un cura","Unha banda de gaiteiros"],correct:"Un cura"},
+{text:"Cantos presidentes tivo ata o presente a nosa Entidade?",options:["2","3","4","5"],correct:"3"},
+{text:"Se ao número de oficinas da provincia de Lugo lle restamos as oficinas da provincia da Coruña, dividimos o resultado entre as de Ourense e lle sumamos as de Pontevedra, cantas oficinas obtemos?",options:["8","9","10","12"],correct:"10"},
+{text:"Cal foi a primeira oficina aberta fóra da provincia de Lugo?",options:["Lalín","Melide","O Carballiño","Santiago de Compostela"],correct:"Melide"},
+{text:"Como se chama o noso único compañeiro que non é de carne e óso e que se atopa nos Servizos Centrais?",image:"isidro.jpg",options:["Isidro","Ruraliño","Caxitron","Cibrán"],correct:"Isidro"}
+];
+const QUESTION_SECONDS=40;
+let participant="",current=0,answers=Array(QUESTIONS.length).fill(null),secondsLeft=QUESTION_SECONDS,timerId=null,quizStartedAt=0,finishing=false;
+const $=id=>document.getElementById(id);const screens=["identifyScreen","quizScreen","savingScreen","finalScreen"];
+function showScreen(id){screens.forEach(s=>$(s).hidden=s!==id);window.scrollTo({top:0,behavior:"smooth"})}
+function normalized(v){return v.trim().toLocaleLowerCase("gl-ES").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ")}
+function validFullName(v){return v.trim().split(/\s+/).filter(x=>x.length>=2).length>=2}
+$("identifyForm").addEventListener("submit",e=>{e.preventDefault();const name=$("participantName").value.trim().replace(/\s+/g," "),okName=validFullName(name),okPrivacy=$("privacyCheck").checked;$("nameError").textContent=okName?"":"Escribe polo menos un nome e un apelido.";$("privacyError").textContent=okPrivacy?"":"Debes aceptar a protección de datos para participar.";if(!okName||!okPrivacy)return;participant=name;current=0;answers=Array(QUESTIONS.length).fill(null);quizStartedAt=performance.now();finishing=false;showScreen("quizScreen");renderQuestion()});
+function renderQuestion(){clearInterval(timerId);secondsLeft=QUESTION_SECONDS;const q=QUESTIONS[current];$("questionCount").textContent=`Pregunta ${current+1} de ${QUESTIONS.length}`;$("progress").style.width=`${((current+1)/QUESTIONS.length)*100}%`;$("questionText").textContent=q.text;$("nextBtn").disabled=answers[current]===null;$("nextBtn").textContent=current===QUESTIONS.length-1?"Finalizar":"Seguinte";const img=$("questionImage");if(q.image){img.src=q.image;img.alt="Imaxe relacionada coa pregunta";img.hidden=false}else{img.src="";img.alt="";img.hidden=true}const box=$("options");box.innerHTML="";q.options.forEach((option,i)=>{const b=document.createElement("button");b.type="button";b.className="option"+(answers[current]===option?" selected":"");b.dataset.letter=String.fromCharCode(65+i);b.textContent=option;b.addEventListener("click",()=>selectOption(option,b));box.appendChild(b)});updateTimer();timerId=setInterval(()=>{secondsLeft--;updateTimer();if(secondsLeft<=0){clearInterval(timerId);goNext()}},1000)}
+function selectOption(selectedOption,button){answers[current]=selectedOption;document.querySelectorAll(".option").forEach(x=>x.classList.toggle("selected",x===button));$("nextBtn").disabled=false}
+function updateTimer(){const t=$("timer");t.textContent=secondsLeft;t.classList.toggle("urgent",secondsLeft<=10)}
+$("nextBtn").addEventListener("click",goNext);function goNext(){if(finishing)return;clearInterval(timerId);if(current<QUESTIONS.length-1){current++;renderQuestion()}else finishQuiz()}
+async function finishQuiz(){if(finishing)return;finishing=true;clearInterval(timerId);const totalElapsed=Math.max(0,Math.round((performance.now()-quizStartedAt)/1000));showScreen("savingScreen");try{const{error}=await db.rpc("registrar_participacion",{p_nombre:participant,p_nombre_normalizado:normalized(participant),p_respuestas:answers,p_tiempo_total_segundos:totalElapsed});if(error)throw error;showFinal()}catch(error){finishing=false;console.error("Erro ao rexistrar a participación:",error);showScreen("quizScreen")}}
+function calculateScore(){return answers.reduce((n,a,i)=>n+(a===QUESTIONS[i].correct?1:0),0)}
+function showFinal(){const score=calculateScore();$("finalName").textContent=participant;$("finalScore").textContent=`${score}/${QUESTIONS.length}`;$("scoreHelp").textContent=`Acertaches ${score} das ${QUESTIONS.length} preguntas`;$("resultMessage").textContent=score===7?"🏆 Pleno! Es un dos máximos acertantes do quiz.":score>=5?"👏 Magnífico resultado!":score>=3?"✅ Bo coñecemento da historia de Caixa Rural Galega.":"🌱 Xa tes excusa para seguir coñecendo mellor a nosa historia.";showScreen("finalScreen")}
+</script>
+</body></html>
