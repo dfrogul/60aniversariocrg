@@ -350,6 +350,44 @@
         event.returnValue = "";
       }
     });
+    async function saveParticipation(){
+
+  showScreen("savingScreen");
+
+  try{
+
+    console.log("PARTICIPANTE:", participant);
+    console.log("RESPUESTAS:", answers);
+    console.log("TIEMPO:", totalElapsed);
+
+    const { data, error } = await db.rpc(
+      "registrar_participacion",
+      {
+        p_nombre: participant,
+        p_nombre_normalizado: normalized(participant),
+        p_respuestas: answers,
+        p_tiempo_total_segundos: totalElapsed
+      }
+    );
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
+
+    if(error) throw error;
+
+    showFinal();
+
+  }catch(error){
+
+    alert(
+      JSON.stringify(error,null,2)
+    );
+
+    console.error(error);
+
+    showFinal(error);
+  }
+}
   </script>
 </body>
 </html>
